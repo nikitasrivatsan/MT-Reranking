@@ -101,17 +101,35 @@ def bleu_score(theta):
   return cb.compute_bleu(t)
   
 def simplex():
-  old_score = 0.0
-  thetas = three_random()
-  thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-  best_score = thetas[0]
-  while abs(old_score - best_score) > THRESHOLD:
+    old_score = 0.0
+    thetas = three_random()
+    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+    best_score = thetas[0]
+    while abs(old_score - best_score) > THRESHOLD:
     old_score = best_score
     thetas = reflect(thetas)
     thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
     best_score = thetas[0]
-  return thetas
+    return thetas
 
 def main():
-  weights = simplex()
-  best_theta = thetas[0]
+    weights = simplex()
+    all_hyps = [pair.split(' ||| ') for pair in open(opts.input)]
+    num_sents = len(all_hyps) / 100
+    for s in xrange(0, num_sents):
+      hyps_for_one_sent = all_hyps[s * 100:s * 100 + 100]
+      (best_score, best) = (-1e300, '')
+      for (num, hyp, feats) in hyps_for_one_sent:
+        score = 0.0
+        for feat in feats.split(' '):
+          (k, v) = feat.split('=')
+          score += weights[k] * float(v)
+        if score > best_score:
+          (best_score, best) = (score, hyp)
+      try: 
+        sys.stdout.write("%s\n" % best)
+      except (Exception):
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
