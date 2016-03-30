@@ -108,7 +108,6 @@ def simplex(thetas):
     return thetas
 
 def main():
-    max_score = 0.0
     weights = random_points()
     for i in range(0, 10):
         print "ITERATION", i
@@ -116,9 +115,6 @@ def main():
         weights = random_points()
         weights[0] = old_best
         weights = simplex(weights)
-        new_score = bleu_score(weights[0])
-        if new_score > max_score:
-            max_score = new_score
 
     print
     print "BEST SCORE:", max_score
