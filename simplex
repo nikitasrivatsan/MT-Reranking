@@ -27,7 +27,7 @@ def midpoint(theta1, theta2):
         mid = (theta1[key] + theta2[key]) / 2.0
     return mid
 
-def update_thetas(thetas):
+def shrink_triangle(thetas):
     # find the midpoint between good and best
     m = midpoint(thetas[1], thetas[0])
     # find the midpoint between worst and best
