@@ -23,7 +23,6 @@ def three_random():
             theta[key] = - random.random()
     return thetas
 
-<<<<<<< HEAD
 def bleu_score(theta):
   return cb.compute_bleu(t)
   
@@ -43,13 +42,11 @@ def simplex():
 
 
 
-=======
 def midpoint(theta1, theta2):
     mid = {}
     for key in theta1.keys():
         mid = (theta1[key] + theta2[key]) / 2.0
     return mid
->>>>>>> f88a1dbee68b577e4b06ab07894ed34e6c14cd62
 
 def add(theta1, theta2):
     added = {}
@@ -108,4 +105,3 @@ def reflect(thetas):
     else:
         return refine(thetas)
 
-def simplex():
