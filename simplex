@@ -23,6 +23,7 @@ def three_random():
             theta[key] = - random.random()
     return thetas
 
+<<<<<<< HEAD
 def bleu_score(theta):
   return cb.compute_bleu(t)
   
@@ -42,4 +43,69 @@ def simplex():
 
 
 
+=======
+def midpoint(theta1, theta2):
+    mid = {}
+    for key in theta1.keys():
+        mid = (theta1[key] + theta2[key]) / 2.0
+    return mid
+>>>>>>> f88a1dbee68b577e4b06ab07894ed34e6c14cd62
 
+def add(theta1, theta2):
+    added = {}
+    for key in theta1.keys():
+        added = theta1[key] + theta2[key]
+    return added
+
+def subtract(theta1, theta2):
+    subtracted = {}
+    for key in theta1.keys():
+        subtracted = theta1[key] - theta2[key]
+    return subtracted
+
+def shrink_triangle(thetas):
+    # find the midpoint between good and best
+    m = midpoint(thetas[1], thetas[0])
+    # find the midpoint between worst and best
+    s = midpoint(thetas[2], thetas[0])
+
+    return [thetas[0], m, s]
+
+def refine(thetas):
+    m = midpoint(thetas[1], thetas[0])
+    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[2])})
+    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[2])})
+
+    c1_err = bleu_score(c1)
+    c2_err = bleu_score(c2)
+    worst_err = bleu_score(thetas[2])
+
+    if c1_err < worst_err and c1_err < c2_err:
+        thetas[2] = c1
+        return thetas
+    elif c2_err < worst_err and c2_err < c1_err:
+        thetas[2] = c2
+        return thetas
+    else:
+        return shrink_triangle(thetas)
+
+def reflect(thetas):
+    m = midpoint(thetas[1], thetas[0])
+    r = add(m, subtract(m, thetas[2]))
+    e = add(m, add(subtract(m, thetas[2]), subtract(m, thetas[2])))
+
+    m_err = bleu_score(m)
+    r_err = bleu_score(r)
+    e_err = bleu_score(e)
+    worst_err = bleu_score(thetas[2])
+
+    if e_err < r_err < worst_err:
+        thetas[2] = e
+        return thetas
+    elif r_err < worst_err:
+        thetas[2] = r
+        return thetas
+    else:
+        return refine(thetas)
+
+def simplex():
