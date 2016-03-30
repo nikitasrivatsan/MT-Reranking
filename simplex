@@ -4,7 +4,7 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.00001
+THRESHOLD = 0.001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
@@ -43,14 +43,14 @@ def subtract(theta1, theta2):
     return subtracted
 
 def shrink_triangle(thetas):
-    # find the midpoint between good and best
+    print "Shrinking triangle"
     m = midpoint(thetas[1], thetas[0])
-    # find the midpoint between worst and best
     s = midpoint(thetas[2], thetas[0])
 
     return [thetas[0], m, s]
 
 def refine(thetas):
+    print "Refining"
     m = midpoint(thetas[1], thetas[0])
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[2]).iteritems()})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[2]).iteritems()})
@@ -69,6 +69,7 @@ def refine(thetas):
         return shrink_triangle(thetas)
 
 def reflect(thetas):
+    print "Reflecting"
     m = midpoint(thetas[1], thetas[0])
     r = add(m, subtract(m, thetas[2]))
     e = add(m, add(subtract(m, thetas[2]), subtract(m, thetas[2])))
@@ -93,12 +94,11 @@ def bleu_score(theta):
 def simplex():
     thetas = three_random()
     thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
-    i = 0
     while abs(bleu_score(thetas[0]) - bleu_score(thetas[2])) > THRESHOLD:
-        i += 1
-        print i
         thetas = reflect(thetas)
         thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+        print [t.values() for t in thetas]
+        print bleu_score(thetas[0])
     return thetas
 
 def main():
