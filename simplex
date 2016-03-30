@@ -4,7 +4,7 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.001
+THRESHOLD = 0.00001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
@@ -21,27 +21,25 @@ def three_random():
         theta = {}
         for key in weights.keys():
             theta[key] = - random.random()
+        thetas.append(theta)
     return thetas
-
-def bleu_score(theta):
-  return cb.compute_bleu(t)
 
 def midpoint(theta1, theta2):
     mid = {}
     for key in theta1.keys():
-        mid = (theta1[key] + theta2[key]) / 2.0
+        mid[key] = (theta1[key] + theta2[key]) / 2.0
     return mid
 
 def add(theta1, theta2):
     added = {}
     for key in theta1.keys():
-        added = theta1[key] + theta2[key]
+        added[key] = theta1[key] + theta2[key]
     return added
 
 def subtract(theta1, theta2):
     subtracted = {}
     for key in theta1.keys():
-        subtracted = theta1[key] - theta2[key]
+        subtracted[key] = theta1[key] - theta2[key]
     return subtracted
 
 def shrink_triangle(thetas):
@@ -54,8 +52,8 @@ def shrink_triangle(thetas):
 
 def refine(thetas):
     m = midpoint(thetas[1], thetas[0])
-    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[2])})
-    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[2])})
+    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[2]).iteritems()})
+    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[2]).iteritems()})
 
     c1_err = bleu_score(c1)
     c2_err = bleu_score(c2)
@@ -89,35 +87,27 @@ def reflect(thetas):
     else:
         return refine(thetas)
 
-def three_random():
-    thetas = []
-    for i in range(0,3):
-        theta = {}
-        for key in weights.keys():
-            theta[key] = - random.random()
-    return thetas
-
 def bleu_score(theta):
-  return cb.compute_bleu(t)
+  return cb.compute_bleu(theta, opts.input)
   
 def simplex():
     old_score = 0.0
     thetas = three_random()
-    thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
-    best_score = thetas[0]
+    thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+    best_score = bleu_score(thetas[0])
     i = 0
     while abs(old_score - best_score) > THRESHOLD:
         i += 1
         print i
         old_score = best_score
         thetas = reflect(thetas)
-        thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
-        best_score = thetas[0]
+        thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+        best_score = bleu_score(thetas[0])
     return thetas
 
 def main():
     weights = simplex()
-    print compute_bleu(weights)
+    print bleu_score(weights[0])
 
 if __name__ == "__main__":
     main()
