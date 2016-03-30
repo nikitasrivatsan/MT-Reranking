@@ -4,7 +4,7 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.001
+THRESHOLD = 0.00001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
@@ -15,16 +15,22 @@ weights = {'p(e)'       : float(opts.lm) ,
            'p(e|f)'     : float(opts.tm1),
            'p_lex(f|e)' : float(opts.tm2)}
 
-def random_points():
+def four_random():
     thetas = []
-    for i in range(0,len(weights) + 1):
+    for i in range(0,4):
         theta = {}
         for key in weights.keys():
             theta[key] = - random.random()
         thetas.append(theta)
     return thetas
 
-def midpoint(theta1, theta2):
+def midpoint(theta1, theta2, theta3):
+    mid = {}
+    for key in theta1.keys():
+        mid[key] = (theta1[key] + theta2[key] + theta3[key]) / 3.0
+    return mid
+
+def midpoint2d(theta1, theta2):
     mid = {}
     for key in theta1.keys():
         mid[key] = (theta1[key] + theta2[key]) / 2.0
@@ -42,67 +48,78 @@ def subtract(theta1, theta2):
         subtracted[key] = theta1[key] - theta2[key]
     return subtracted
 
-def shrink_triangle(thetas):
-    print "Shrinking triangle"
-    for t in range(1, len(thetas)):
-        s = midpoint(thetas[t], thetas[0])
-        thetas[t] = s
+def shrink(thetas):
+    # find the midpoint between good and best
+    m1 = midpoint2d(thetas[0], thetas[1])
+    # find the midpoint between good and best, again
+    m2 = midpoint2d(thetas[0], thetas[2])
+    # find the midpoint between worst and best
+    s = midpoint2d(thetas[0],thetas[3])
 
-    return thetas
+    print "**SHRINK**"
+    return [thetas[0], m1, m2, s]
 
-def refine(thetas, m, worst_err):
-    print "Refining"
-    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
-    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
+def refine(thetas):
+    m = midpoint(thetas[2], thetas[1], thetas[0])
+    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[3]).iteritems()})
+    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[3]).iteritems()})
 
     c1_err = bleu_score(c1)
     c2_err = bleu_score(c2)
+    worst_err = bleu_score(thetas[2])
 
     if c1_err < worst_err and c1_err < c2_err:
-        thetas[-1] = c1
+        print "**REFINE: IN**"
+        thetas[3] = c1
         return thetas
     elif c2_err < worst_err and c2_err < c1_err:
-        thetas[-1] = c2
+        print "**REFINE: OUT**"
+        thetas[3] = c2
         return thetas
     else:
-        return shrink_triangle(thetas)
+        return shrink(thetas)
 
 def reflect(thetas):
-    print "Reflecting"
-    m = {}
-    for k,v in thetas[0].iteritems():
-        m[k] = 0.0
-    for t in range(0, len(thetas) - 1):
-        m = add(m, thetas[t])
-    m = {k : v / (len(thetas) - 1) for k,v in m.iteritems()}
-    r = add(m, subtract(m, thetas[-1]))
-    e = add(m, add(subtract(m, thetas[-1]), subtract(m, thetas[-1])))
+    m = midpoint(thetas[2], thetas[1], thetas[0])
+    r = add(m, subtract(m, thetas[3]))
+    e = add(m, add(subtract(m, thetas[3]), subtract(m, thetas[3])))
 
     m_err = bleu_score(m)
     r_err = bleu_score(r)
     e_err = bleu_score(e)
-    worst_err = bleu_score(thetas[-1])
+    worst_err = bleu_score(thetas[3])
 
     if e_err < r_err < worst_err:
-        thetas[-1] = e
+        print "**REFLECT: E**"
+        thetas[3] = e
         return thetas
     elif r_err < worst_err:
-        thetas[-1] = r
+        print "**REFLECT: R**"
+        thetas[3] = r
         return thetas
     else:
-        return refine(thetas, m, worst_err)
+        return refine(thetas)
 
 def bleu_score(theta):
   return cb.compute_bleu(theta, opts.input)
   
 def simplex():
-    thetas = random_points()
+    thetas = four_random()
     thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
-    while abs(bleu_score(thetas[0]) - bleu_score(thetas[-1])) > THRESHOLD:
+    i = 0
+    worst_score = bleu_score(thetas[3])
+    best_score = bleu_score(thetas[0])
+    while abs(worst_score - best_score) > THRESHOLD:
+        i += 1
+        print i
+        print "Absolute Value: " + str(abs(worst_score - best_score))
         thetas = reflect(thetas)
+        print "Before: " + str(thetas)
         thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
-        print [t.values() for t in thetas]
-        print bleu_score(thetas[0])
+        print "\nAfter: " + str(thetas)
+        best_score = bleu_score(thetas[0])
+        worst_score = bleu_score(thetas[3])
+        print "Bleu Score: " + str(best_score)
     return thetas
 
 def main():
