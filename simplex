@@ -131,6 +131,7 @@ def simplex():
         print "Bleu Score: " + str(best_score)
         print [t.values() for t in thetas]
         print bleu_score(thetas[0])
+        print
     return thetas
 
 def main():

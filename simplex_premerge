@@ -4,7 +4,7 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.001
+THRESHOLD = 0.0001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
@@ -51,7 +51,6 @@ def shrink_triangle(thetas):
     return thetas
 
 def refine(thetas, m, worst_score):
-    print "Refining"
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
 
@@ -59,16 +58,17 @@ def refine(thetas, m, worst_score):
     c2_score = bleu_score(c2)
 
     if c1_score > worst_score and c1_score > c2_score:
+        print "Refining at C1"
         thetas[-1] = c1
         return thetas
     elif c2_score > worst_score and c2_score > c1_score:
+        print "Refining at C2"
         thetas[-1] = c2
         return thetas
     else:
         return shrink_triangle(thetas)
 
 def reflect(thetas):
-    print "Reflecting"
     m = {}
     for k,v in thetas[0].iteritems():
         m[k] = 0.0
@@ -84,9 +84,11 @@ def reflect(thetas):
     worst_score = bleu_score(thetas[-1])
 
     if e_score > r_score > worst_score:
+        print "Extending"
         thetas[-1] = e
         return thetas
     elif r_score > worst_score:
+        print "Reflecting"
         thetas[-1] = r
         return thetas
     else:
@@ -95,19 +97,31 @@ def reflect(thetas):
 def bleu_score(theta):
   return cb.compute_bleu(theta, opts.input)
   
-def simplex():
-    thetas = random_points()
+def simplex(thetas):
     thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
     while abs(bleu_score(thetas[0]) - bleu_score(thetas[-1])) > THRESHOLD:
         thetas = reflect(thetas)
         thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
         print [t.values() for t in thetas]
         print bleu_score(thetas[0])
+        print
     return thetas
 
 def main():
-    weights = simplex()
-    print bleu_score(weights[0])
+    max_score = 0.0
+    weights = random_points()
+    for i in range(0, 10):
+        print "ITERATION", i
+        old_best = weights[0]
+        weights = random_points()
+        weights[0] = old_best
+        weights = simplex(weights)
+        new_score = bleu_score(weights[0])
+        if new_score > max_score:
+            max_score = new_score
+
+    print
+    print "BEST SCORE:", max_score
 
 if __name__ == "__main__":
     main()
