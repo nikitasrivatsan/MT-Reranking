@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import optparse
 import sys
+import random
 
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
@@ -11,6 +12,14 @@ optparser.add_option("-s", "--tm2", dest="tm2", default=-0.5, type="float", help
 weights = {'p(e)'       : float(opts.lm) ,
            'p(e|f)'     : float(opts.tm1),
            'p_lex(f|e)' : float(opts.tm2)}
+
+def three_random():
+    thetas = []
+    for i in range(0,3):
+        theta = {}
+        for key in weights.keys():
+            theta[key] = - random.random()
+    return thetas
 
 all_hyps = [pair.split(' ||| ') for pair in open(opts.input)]
 num_sents = len(all_hyps) / 100
