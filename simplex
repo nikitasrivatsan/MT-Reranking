@@ -105,7 +105,10 @@ def simplex():
     thetas = three_random()
     thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
     best_score = thetas[0]
+    i = 0
     while abs(old_score - best_score) > THRESHOLD:
+        i += 1
+        print i
         old_score = best_score
         thetas = reflect(thetas)
         thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
@@ -116,10 +119,7 @@ def main():
     weights = simplex()
     all_hyps = [pair.split(' ||| ') for pair in open(opts.input)]
     num_sents = len(all_hyps) / 100
-    i = 0
     for s in xrange(0, num_sents):
-      i += 1
-      print i
       hyps_for_one_sent = all_hyps[s * 100:s * 100 + 100]
       (best_score, best) = (-1e300, '')
       for (num, hyp, feats) in hyps_for_one_sent:
