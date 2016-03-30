@@ -18,3 +18,8 @@ for (r,h) in zip(ref, hyp):
   stats = [sum(scores) for scores in zip(stats, bleu.bleu_stats(h,r))]
 print bleu.bleu(stats)
 
+def compute_bleu(theta):
+	for (r,h) in zip(ref, hyp):
+		stats = [sum(scores) for scores in zip(stats, bleu.bleu_stats(h,r))]
+	return bleu.bleu(stats)
+
