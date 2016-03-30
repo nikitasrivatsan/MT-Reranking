@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 import optparse
 import sys
-import compute-bleu as cb
+import compute_bleu as cb
 import random
+
+# alter this as needed
+sys.path.append("/home/viki/Documents/MachineTranslation/MT-Reranking")
 
 THRESHOLD = 0.001
 optparser = optparse.OptionParser()
@@ -103,13 +106,13 @@ def bleu_score(theta):
 def simplex():
     old_score = 0.0
     thetas = three_random()
-    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+    thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
     best_score = thetas[0]
     while abs(old_score - best_score) > THRESHOLD:
-    old_score = best_score
-    thetas = reflect(thetas)
-    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-    best_score = thetas[0]
+        old_score = best_score
+        thetas = reflect(thetas)
+        thetas = sorted(thetas,lambda x: bleu_score(x),reverse=True)
+        best_score = thetas[0]
     return thetas
 
 def main():
