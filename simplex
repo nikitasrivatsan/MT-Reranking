@@ -15,33 +15,6 @@ weights = {'p(e)'       : float(opts.lm) ,
            'p(e|f)'     : float(opts.tm1),
            'p_lex(f|e)' : float(opts.tm2)}
 
-def three_random():
-    thetas = []
-    for i in range(0,3):
-        theta = {}
-        for key in weights.keys():
-            theta[key] = - random.random()
-    return thetas
-
-def bleu_score(theta):
-  return cb.compute_bleu(t)
-  
-def simplex():
-  old_score = 0.0
-  thetas = self.three_random()
-  thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-  best_score = thetas[0]
-  while abs(old_score - best_score) > THRESHOLD:
-    old_score = best_score
-    thetas = self.reflect(thetas)
-    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-    best_score = thetas[0]
-  return thetas
-
-
-
-
-
 def midpoint(theta1, theta2):
     mid = {}
     for key in theta1.keys():
@@ -105,3 +78,29 @@ def reflect(thetas):
     else:
         return refine(thetas)
 
+def three_random():
+    thetas = []
+    for i in range(0,3):
+        theta = {}
+        for key in weights.keys():
+            theta[key] = - random.random()
+    return thetas
+
+def bleu_score(theta):
+  return cb.compute_bleu(t)
+  
+def simplex():
+  old_score = 0.0
+  thetas = three_random()
+  thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+  best_score = thetas[0]
+  while abs(old_score - best_score) > THRESHOLD:
+    old_score = best_score
+    thetas = reflect(thetas)
+    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+    best_score = thetas[0]
+  return thetas
+
+def main():
+  weights = simplex()
+  best_theta = thetas[0]
