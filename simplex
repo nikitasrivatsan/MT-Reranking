@@ -25,22 +25,6 @@ def three_random():
 
 def bleu_score(theta):
   return cb.compute_bleu(t)
-  
-def simplex():
-  old_score = 0.0
-  thetas = self.three_random()
-  thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-  best_score = thetas[0]
-  while abs(old_score - best_score) > THRESHOLD:
-    old_score = best_score
-    thetas = self.reflect(thetas)
-    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
-    best_score = thetas[0]
-  return thetas
-
-
-
-
 
 def midpoint(theta1, theta2):
     mid = {}
@@ -105,3 +89,14 @@ def reflect(thetas):
     else:
         return refine(thetas)
 
+def simplex():
+  old_score = 0.0
+  thetas = self.three_random()
+  thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+  best_score = thetas[0]
+  while abs(old_score - best_score) > THRESHOLD:
+    old_score = best_score
+    thetas = self.reflect(thetas)
+    thetas = sorted(thetas,lamda x: bleu_score(x),reverse=True)
+    best_score = thetas[0]
+  return thetas
