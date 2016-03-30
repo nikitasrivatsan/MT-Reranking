@@ -51,14 +51,13 @@ def shrink_triangle(thetas):
     return [thetas[0], m, s]
     return thetas
 
-def refine(thetas, m):
+def refine(thetas, m, worst_err):
     print "Refining"
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
 
     c1_err = bleu_score(c1)
     c2_err = bleu_score(c2)
-    worst_err = bleu_score(thetas[-1])
 
     if c1_err < worst_err and c1_err < c2_err:
         print "**REFINE: IN**"
@@ -104,7 +103,7 @@ def reflect(thetas):
         thetas[-1] = r
         return thetas
     else:
-        return refine(thetas, m)
+        return refine(thetas, m, worst_err)
 
 def bleu_score(theta):
   return cb.compute_bleu(theta, opts.input)
