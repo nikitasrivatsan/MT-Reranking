@@ -13,7 +13,9 @@ optparser.add_option("-s", "--tm2", dest="tm2", default=-0.5, type="float", help
 (opts, _) = optparser.parse_args()
 weights = {'p(e)'       : float(opts.lm) ,
            'p(e|f)'     : float(opts.tm1),
-           'p_lex(f|e)' : float(opts.tm2)}
+           'p_lex(f|e)' : float(opts.tm2),
+           'sentence_length' : 0.5,
+           'word_diff' : 0.5}
 
 def random_points():
     thetas = []
@@ -109,7 +111,7 @@ def simplex(thetas):
 
 def main():
     weights = random_points()
-    for i in range(0, 10):
+    for i in range(0, 4):
         print "ITERATION", i
         old_best = weights[0]
         weights = random_points()

@@ -3,15 +3,18 @@
 import sys
 
 def main():
-    100best = open(sys.argv[1])
+    best = open(sys.argv[1])
     source = open(sys.argv[2])
     outfile = open(sys.argv[3], 'w')
 
-    for line in 100best:
-        100best_words = len(line.split('|||')[1].split())
-        source_line = source.readline()
-        source_words = len(source_line.split('|||')[1].split())
-        outfile.write(line.strip() + " word_diff=" + str(source_words - 100best_words) + "\n")
+    i = -1
+    for line in best:
+        i += 1
+        best_words = len(line.split(' ||| ')[1].split())
+        if i % 100 == 0:
+            source_line = source.readline()
+        source_words = len(source_line.split(' ||| ')[1].split())
+        outfile.write(line.strip() + " word_diff=" + str(source_words - best_words) + "\n")
 
 if __name__ == "__main__":
     main()
