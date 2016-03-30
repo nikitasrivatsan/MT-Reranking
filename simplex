@@ -4,9 +4,6 @@ import sys
 import compute_bleu as cb
 import random
 
-# alter this as needed
-sys.path.append("/home/viki/Documents/MachineTranslation/MT-Reranking")
-
 THRESHOLD = 0.001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
@@ -119,7 +116,10 @@ def main():
     weights = simplex()
     all_hyps = [pair.split(' ||| ') for pair in open(opts.input)]
     num_sents = len(all_hyps) / 100
+    i = 0
     for s in xrange(0, num_sents):
+      i += 1
+      print i
       hyps_for_one_sent = all_hyps[s * 100:s * 100 + 100]
       (best_score, best) = (-1e300, '')
       for (num, hyp, feats) in hyps_for_one_sent:
