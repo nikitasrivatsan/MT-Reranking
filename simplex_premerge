@@ -4,7 +4,7 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.0001
+THRESHOLD = 0.001
 optparser = optparse.OptionParser()
 optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
@@ -17,9 +17,9 @@ weights = {'p(e)'       : float(opts.lm) ,
            'sentence_length' : 0.5,
            'word_diff' : 0.5}
 
-def random_points():
+def random_points(n):
     thetas = []
-    for i in range(0,len(weights) + 1):
+    for i in range(0,n):
         theta = {}
         for key in weights.keys():
             theta[key] = - random.random()
@@ -110,13 +110,13 @@ def simplex(thetas):
     return thetas
 
 def main():
-    weights = random_points()
+    thetas = sorted(random_points(20), key = lambda x : bleu_score(x), reverse=True)[0:len(weights) + 1]
     for i in range(0, 4):
         print "ITERATION", i
-        old_best = weights[0]
-        weights = random_points()
-        weights[0] = old_best
-        weights = simplex(weights)
+        old_best = thetas[0]
+        thetas = random_points(len(weights) + 1)
+        thetas[0] = old_best
+        thetas = simplex(thetas)
 
 if __name__ == "__main__":
     main()
