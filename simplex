@@ -52,9 +52,9 @@ def refine(thetas):
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[2])})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[2])})
 
-    c1_err = bleu(c1)
-    c2_err = bleu(c2)
-    worst_err = bleu(thetas[2])
+    c1_err = bleu_score(c1)
+    c2_err = bleu_score(c2)
+    worst_err = bleu_score(thetas[2])
 
     if c1_err < worst_err and c1_err < c2_err:
         thetas[2] = c1
@@ -70,10 +70,10 @@ def reflect(thetas):
     r = add(m, subtract(m, thetas[2]))
     e = add(m, add(subtract(m, thetas[2]), subtract(m, thetas[2])))
 
-    m_err = bleu(m)
-    r_err = bleu(r)
-    e_err = bleu(e)
-    worst_err = bleu(thetas[2])
+    m_err = bleu_score(m)
+    r_err = bleu_score(r)
+    e_err = bleu_score(e)
+    worst_err = bleu_score(thetas[2])
 
     if e_err < r_err < worst_err:
         thetas[2] = e
