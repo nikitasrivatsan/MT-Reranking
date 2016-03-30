@@ -50,18 +50,18 @@ def shrink_triangle(thetas):
 
     return thetas
 
-def refine(thetas, m, worst_err):
+def refine(thetas, m, worst_score):
     print "Refining"
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
 
-    c1_err = bleu_score(c1)
-    c2_err = bleu_score(c2)
+    c1_score = bleu_score(c1)
+    c2_score = bleu_score(c2)
 
-    if c1_err < worst_err and c1_err < c2_err:
+    if c1_score > worst_score and c1_score > c2_score:
         thetas[-1] = c1
         return thetas
-    elif c2_err < worst_err and c2_err < c1_err:
+    elif c2_score > worst_score and c2_score > c1_score:
         thetas[-1] = c2
         return thetas
     else:
@@ -78,19 +78,19 @@ def reflect(thetas):
     r = add(m, subtract(m, thetas[-1]))
     e = add(m, add(subtract(m, thetas[-1]), subtract(m, thetas[-1])))
 
-    m_err = bleu_score(m)
-    r_err = bleu_score(r)
-    e_err = bleu_score(e)
-    worst_err = bleu_score(thetas[-1])
+    m_score = bleu_score(m)
+    r_score = bleu_score(r)
+    e_score = bleu_score(e)
+    worst_score = bleu_score(thetas[-1])
 
-    if e_err < r_err < worst_err:
+    if e_score > r_score > worst_score:
         thetas[-1] = e
         return thetas
-    elif r_err < worst_err:
+    elif r_score > worst_score:
         thetas[-1] = r
         return thetas
     else:
-        return refine(thetas, m, worst_err)
+        return refine(thetas, m, worst_score)
 
 def bleu_score(theta):
   return cb.compute_bleu(theta, opts.input)
