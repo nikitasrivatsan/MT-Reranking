@@ -47,18 +47,26 @@ def shrink_triangle(thetas):
     for t in range(1, len(thetas)):
         s = midpoint(thetas[t], thetas[0])
         thetas[t] = s
-
+    print "**SHRINK**"
+    return [thetas[0], m, s]
     return thetas
 
-def refine(thetas, m, worst_err):
+def refine(thetas, m):
     print "Refining"
     c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
     c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
 
     c1_err = bleu_score(c1)
     c2_err = bleu_score(c2)
+    worst_err = bleu_score(thetas[-1])
 
     if c1_err < worst_err and c1_err < c2_err:
+        print "**REFINE: IN**"
+        thetas[2] = c1
+        return thetas
+    elif c2_err < worst_err and c2_err < c1_err:
+        print "**REFINE: OUT**"
+        thetas[2] = c2
         thetas[-1] = c1
         return thetas
     elif c2_err < worst_err and c2_err < c1_err:
@@ -84,23 +92,43 @@ def reflect(thetas):
     worst_err = bleu_score(thetas[-1])
 
     if e_err < r_err < worst_err:
+        print "**REFLECT: E**"
+        thetas[2] = e
+        return thetas
+    elif r_err < worst_err:
+        print "**REFLECT: R**"
+        thetas[2] = r
         thetas[-1] = e
         return thetas
     elif r_err < worst_err:
         thetas[-1] = r
         return thetas
     else:
-        return refine(thetas, m, worst_err)
+        return refine(thetas, m)
 
 def bleu_score(theta):
   return cb.compute_bleu(theta, opts.input)
   
 def simplex():
+    thetas = three_random()
+    thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+    i = 0
+    worst_score = bleu_score(thetas[2])
+    best_score = bleu_score(thetas[0])
+    while abs(worst_score - best_score) > THRESHOLD:
+        i += 1
+        print i
+        print "Absolute Value: " + str(abs(worst_score - best_score))
     thetas = random_points()
     thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
     while abs(bleu_score(thetas[0]) - bleu_score(thetas[-1])) > THRESHOLD:
         thetas = reflect(thetas)
+        print "Before: " + str(thetas)
         thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+        print "\nAfter: " + str(thetas)
+        best_score = bleu_score(thetas[0])
+        worst_score = bleu_score(thetas[2])
+        print "Bleu Score: " + str(best_score)
         print [t.values() for t in thetas]
         print bleu_score(thetas[0])
     return thetas
