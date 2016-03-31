@@ -111,7 +111,7 @@ def simplex(thetas):
 
 def main():
     thetas = sorted(random_points(20), key = lambda x : bleu_score(x), reverse=True)[0:len(weights) + 1]
-    for i in range(0, 4):
+    for i in range(0, 5):
         print "ITERATION", i
         old_best = thetas[0]
         thetas = random_points(len(weights) + 1)
