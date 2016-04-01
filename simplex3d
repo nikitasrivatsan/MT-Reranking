@@ -4,9 +4,9 @@ import sys
 import compute_bleu as cb
 import random
 
-THRESHOLD = 0.00001
+THRESHOLD = 0.001
 optparser = optparse.OptionParser()
-optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
+optparser.add_option("-k", "--kbest-list", dest="input", default="data_old_old/dev+test.100best", help="100-best translation lists")
 optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
 optparser.add_option("-t", "--tm1", dest="tm1", default=-0.5, type="float", help="Translation model p(e|f) weight")
 optparser.add_option("-s", "--tm2", dest="tm2", default=-0.5, type="float", help="Lexical translation model p_lex(f|e) weight")

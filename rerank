@@ -10,7 +10,9 @@ optparser.add_option("-s", "--tm2", dest="tm2", default=-0.5, type="float", help
 (opts, _) = optparser.parse_args()
 weights = {'p(e)'       : float(opts.lm) ,
            'p(e|f)'     : float(opts.tm1),
-           'p_lex(f|e)' : float(opts.tm2)}
+           'p_lex(f|e)' : float(opts.tm2),
+           'sentence_length' : 0.5,
+           'word_diff' : 0.5}
 
 all_hyps = [pair.split(' ||| ') for pair in open(opts.input)]
 num_sents = len(all_hyps) / 100

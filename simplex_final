@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+import optparse
+import sys
+import compute_bleu as cb
+import random
+
+THRESHOLD = 0.001
+optparser = optparse.OptionParser()
+optparser.add_option("-k", "--kbest-list", dest="input", default="data/dev+test.100best", help="100-best translation lists")
+optparser.add_option("-l", "--lm", dest="lm", default=-1.0, type="float", help="Language model weight")
+optparser.add_option("-t", "--tm1", dest="tm1", default=-0.5, type="float", help="Translation model p(e|f) weight")
+optparser.add_option("-s", "--tm2", dest="tm2", default=-0.5, type="float", help="Lexical translation model p_lex(f|e) weight")
+(opts, _) = optparser.parse_args()
+weights = {'p(e)'       : float(opts.lm) ,
+           'p(e|f)'     : float(opts.tm1),
+           'p_lex(f|e)' : float(opts.tm2),
+           'sentence_length' : 0.5,
+           'word_diff' : 0.5}
+
+def random_points(n):
+    thetas = []
+    for i in range(0,n):
+        theta = {}
+        for key in weights.keys():
+            theta[key] = - random.random()
+        thetas.append(theta)
+    return thetas
+
+def midpoint(theta1, theta2):
+    mid = {}
+    for key in theta1.keys():
+        mid[key] = (theta1[key] + theta2[key]) / 2.0
+    return mid
+
+def add(theta1, theta2):
+    added = {}
+    for key in theta1.keys():
+        added[key] = theta1[key] + theta2[key]
+    return added
+
+def subtract(theta1, theta2):
+    subtracted = {}
+    for key in theta1.keys():
+        subtracted[key] = theta1[key] - theta2[key]
+    return subtracted
+
+def shrink_triangle(thetas):
+    print "Shrinking triangle"
+    for t in range(1, len(thetas)):
+        s = midpoint(thetas[t], thetas[0])
+        thetas[t] = s
+
+    return thetas
+
+def refine(thetas, m, worst_score):
+    c1 = add(m, {k: v / 2.0 for k,v in subtract(m, thetas[-1]).iteritems()})
+    c2 = add(m, {k: v * 1.5 for k,v in subtract(m, thetas[-1]).iteritems()})
+
+    c1_score = bleu_score(c1)
+    c2_score = bleu_score(c2)
+
+    if c1_score > worst_score and c1_score > c2_score:
+        print "Refining at C1"
+        thetas[-1] = c1
+        return thetas
+    elif c2_score > worst_score and c2_score > c1_score:
+        print "Refining at C2"
+        thetas[-1] = c2
+        return thetas
+    else:
+        return shrink_triangle(thetas)
+
+def reflect(thetas):
+    m = {}
+    for k,v in thetas[0].iteritems():
+        m[k] = 0.0
+    for t in range(0, len(thetas) - 1):
+        m = add(m, thetas[t])
+    m = {k : v / (len(thetas) - 1) for k,v in m.iteritems()}
+    r = add(m, subtract(m, thetas[-1]))
+    e = add(m, add(subtract(m, thetas[-1]), subtract(m, thetas[-1])))
+
+    m_score = bleu_score(m)
+    r_score = bleu_score(r)
+    e_score = bleu_score(e)
+    worst_score = bleu_score(thetas[-1])
+
+    if e_score > r_score > worst_score:
+        print "Extending"
+        thetas[-1] = e
+        return thetas
+    elif r_score > worst_score:
+        print "Reflecting"
+        thetas[-1] = r
+        return thetas
+    else:
+        return refine(thetas, m, worst_score)
+
+def bleu_score(theta):
+  return cb.compute_bleu(theta, opts.input)
+  
+def simplex(thetas):
+    thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+    while abs(bleu_score(thetas[0]) - bleu_score(thetas[-1])) > THRESHOLD:
+        thetas = reflect(thetas)
+        thetas = sorted(thetas,key = lambda x: bleu_score(x),reverse=True)
+        print [t.values() for t in thetas]
+        print bleu_score(thetas[0])
+        print
+    return thetas
+
+def main():
+    thetas = sorted(random_points(20), key = lambda x : bleu_score(x), reverse=True)[0:len(weights) + 1]
+    for i in range(0, 5):
+        print "ITERATION", i
+        old_best = thetas[0]
+        thetas = random_points(len(weights) + 1)
+        thetas[0] = old_best
+        thetas = simplex(thetas)
+
+if __name__ == "__main__":
+    main()
