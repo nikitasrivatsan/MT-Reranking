@@ -34,6 +34,16 @@ Bleu Score & 0.27351\
 \end{tabular}
 \end{center}
 
+We experimented with the weights to optimize the bleu score. Optimal weights were found to be
+-0.9 for the language model weight, -0.6 for the translation model weight, and -1.0 for the lexical
+translation model weight. This yielded a bleu score as follows:
+
+\begin{center}
+\begin{tabular}{l | l}
+Bleu Score & 0.28099\
+\end{tabular}
+\end{center}
+
 Firstly, following the outline in the lecture slides, we implemented the simplex method with four points to handle
 the three initially provided weights. In the simplex method, four initial points are randomly generated, and reflect,
 refine, and shrink steps are used to converge towards an optimal bleu score point. When the best and worst
